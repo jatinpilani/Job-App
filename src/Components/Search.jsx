@@ -1,61 +1,146 @@
-import React from "react";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 
-function Search() {
+function Search({ filters, setFilters, apii }) {
+  const [jobs, setJobs] = useState([]);
+  const [loading, setLoading] = useState(false);
+
+  const [employmentTypes, setEmploymentTypes] = useState([]);
+  const [experienceLevels, setExperienceLevels] = useState([]);
+  const [location, setLocation] = useState([]);
+
+  const api = apii;
+
+  const fetchApi = async () => {
+    setLoading(true);
+
+    try {
+      const res = await axios.get(api);
+
+      const jobsData = res.data.jobs || [];
+
+      setJobs(jobsData);
+
+      const uniqueTypes = [
+        ...new Set(
+          jobsData
+            .map((job) => job.employmentType)
+            .filter(Boolean)
+        ),
+      ];
+
+      const uniqueExperience = [
+        ...new Set(
+          jobsData.flatMap((job) => job.seniority || [])
+        ),
+      ];
+
+      const uniqueLocation = [
+        ...new Set(
+          jobsData.flatMap(
+            (job) => job.locationRestrictions || []
+          )
+        ),
+      ];
+
+      setEmploymentTypes(uniqueTypes);
+      setExperienceLevels(uniqueExperience);
+      setLocation(uniqueLocation);
+
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchApi();
+  }, [api]);
+
   return (
-    <div className="w-full  py-6 px-4">
-      <div className="max-w-5xl mx-auto bg-white  rounded-2xl p-6 ">
-        
+    <div className="w-full py-6 px-4">
+      <div className="max-w-5xl mx-auto bg-white rounded-2xl p-6 shadow">
+
+        {/* Search Input */}
         <div className="mb-5">
           <input
             type="text"
-            placeholder="Search jobs, skills, companies..."
-            className="w-full px-5 py-4 text-gray-700 border border-gray-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200 shadow-sm"
+            placeholder="Search jobs..."
+            value={filters.search}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                search: e.target.value,
+              })
+            }
+            className="w-full px-5 py-4 border rounded-xl"
           />
         </div>
 
-
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          
+
+
           <select
-            id="alllocation"
-            name="alllocation"
-            className="w-full px-4 py-3 text-gray-700 border border-gray-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm"
+            value={filters.location}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                location: e.target.value,
+              })
+            }
+            className="w-full px-4 py-3 border rounded-xl"
           >
-            <option value="">Select Location</option>
-            <option value="delhi">Delhi</option>
-            <option value="mumbai">Mumbai</option>
-            <option value="bangalore">Bangalore</option>
+            <option value="">All Location</option>
+
+            {location.map((loc, index) => (
+              <option key={index} value={loc}>
+                {loc}
+              </option>
+            ))}
           </select>
 
           <select
-            id="allroles"
-            name="allroles"
-            className="w-full px-4 py-3 text-gray-700 border border-gray-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm"
+            value={filters.experience}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                experience: e.target.value,
+              })
+            }
+            className="w-full px-4 py-3 border rounded-xl"
           >
-            <option value="">Select Role</option>
-            <option value="data">Data Analyst</option>
-            <option value="frontend">Frontend Developer</option>
-            <option value="backend">Backend Developer</option>
+            <option value="">All Level</option>
+
+            {experienceLevels.map((exp, index) => (
+              <option key={index} value={exp}>
+                {exp}
+              </option>
+            ))}
           </select>
 
           <select
-            id="alltype"
-            name="alltype"
-            className="w-full px-4 py-3 text-gray-700 border border-gray-300 rounded-xl bg-white outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition shadow-sm"
+            value={filters.type}
+            onChange={(e) =>
+              setFilters({
+                ...filters,
+                type: e.target.value,
+              })
+            }
+            className="w-full px-4 py-3 border rounded-xl"
           >
-            <option value="">Job Type</option>
-            <option value="full-time">Full-time</option>
-            <option value="part-time">Part-time</option>
-            <option value="internship">Internship</option>
+            <option value="">All Job Type</option>
+
+            {employmentTypes.map((type, index) => (
+              <option key={index} value={type}>
+                {type}
+              </option>
+            ))}
           </select>
+
         </div>
 
-        {/* Search Button */}
-        <div className="mt-6 flex justify-center">
-          <button className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-xl transition duration-200 shadow-md">
-            Search Jobs
-          </button>
-        </div>
+
       </div>
     </div>
   );

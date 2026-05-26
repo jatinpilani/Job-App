@@ -1,7 +1,7 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
 
-function Header() {
+function Header({savedJobs}) {
   return (
     <div className="w-full flex items-center border border-gray-500">
       <div className="w-full flex items-center justify-between mx-40 p-4">
@@ -14,7 +14,7 @@ function Header() {
 
           <span className="font-bold">JobBoard</span>
 
-          {/* Browse */}
+
           <NavLink
             to="/"
             className={({ isActive }) =>
@@ -26,7 +26,7 @@ function Header() {
             Browse
           </NavLink>
 
-          {/* Saved */}
+
           <NavLink
             to="/saved"
             className={({ isActive }) =>
@@ -35,7 +35,7 @@ function Header() {
                 : "text-gray-600 hover:text-black"
             }
           >
-            Saved(0)
+            Saved({savedJobs.length})
           </NavLink>
 
         </div>

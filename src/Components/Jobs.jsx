@@ -1,27 +1,75 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 
-function Jobs() {
-  const [jobs, setJobs] = useState([]);
-
-  const api = "/api/jobs/api?q=react&limit=20";
+function Jobs({ savedJobs, setSavedJobs,apii , filters}){
+   const [jobs, setJobs] = useState([]);
+const [loading, setLoading] = useState(false);
+  const api = apii;
 
   const fetchApi = async () => {
-    try {
-      const res = await axios.get(api);
-      setJobs(res.data.jobs || []);
-    } catch (error) {
-      console.error("Error fetching jobs:", error);
-    }
-  };
+  setLoading(true);
 
-  useEffect(() => {
-    fetchApi();
-  }, []);
+  try {
+    const res = await axios.get(api);
+    setJobs(res.data.jobs || []);
+  } catch (error) {
+    console.error("Error fetching jobs:", error);
+  } finally {
+    setLoading(false); 
+  }
+};
+const filteredJobs = jobs.filter((job) => {
+  const matchesSearch =
+    job.title
+      ?.toLowerCase()
+      .includes(filters.search.toLowerCase()) ||
+    job.companyName
+      ?.toLowerCase()
+      .includes(filters.search.toLowerCase());
+
+  const matchesLocation =
+    filters.location === "" ||
+    job.locationRestrictions?.includes(filters.location);
+
+  const matchesExperience =
+    filters.experience === "" ||
+    job.seniority?.includes(filters.experience);
+
+  const matchesType =
+    filters.type === "" ||
+    job.employmentType === filters.type;
 
   return (
+    matchesSearch &&
+    matchesLocation &&
+    matchesExperience &&
+    matchesType
+  );
+});
+  useEffect(() => {
+    fetchApi();
+  }, [api]);
+
+  const saveJob = (job) => {
+    console.log()
+    const exists = savedJobs.some((j) => j.companyName === job?.companyName);
+
+    if (exists) {
+      setSavedJobs(savedJobs.filter((j) => j.companyName !== job?.companyName));
+    } else {
+      setSavedJobs([...savedJobs, job]);
+    }
+  };
+  if (loading) {
+  return (
+    <div className="flex justify-center items-center h-96">
+      <div className="w-10 h-10 border-4 border-gray-300 border-t-black rounded-full animate-spin"></div>
+    </div>
+  );
+}
+  return (
     <div className="min-h-screen  py-10 px-4 sm:px-6 lg:px-10">
-      {/* Heading */}
+
       <div className="max-w-7xl mx-auto mb-8">
 
 
@@ -30,9 +78,20 @@ function Jobs() {
         </p>
       </div>
 
-      {/* Jobs Grid */}
-      <div className="max-w-7xl mx-auto grid grid-cols-1 gap-6">
-        {jobs.map((job, index) => (
+     <div className="max-w-7xl mx-auto grid grid-cols-1 gap-6">
+
+  {filteredJobs.length === 0 ? (
+    <div className="bg-white rounded-3xl p-10 text-center shadow-sm border">
+      <h2 className="text-2xl font-bold text-gray-800">
+        No Jobs Found
+      </h2>
+
+      <p className="text-gray-500 mt-3">
+        Try changing your search or filters.
+      </p>
+    </div>
+  ) : (
+    filteredJobs.map((job, index) => (
           <div
             key={job.id || index}
             className="bg-white border border-gray-200 rounded-3xl p-5 sm:p-6 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
@@ -43,8 +102,8 @@ function Jobs() {
               <div className="flex gap-4">
                 {/* LOGO */}
                 <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl  flex items-center justify-center ">
-                  <span className="text-white text-xl sm:text-2xl font-bold">
-                    <img src={job.companyLogo} alt="" />
+                  <span className="text-black text-xl sm:text-2xl font-bold ">
+                    <img src={job.companyLogo}  />
                   </span>
                 </div>
 
@@ -63,7 +122,7 @@ function Jobs() {
                       : job.locationRestrictions || "Remote"}
                   </p>
 
-                  {/* TAGS */}
+  
                   <div className="flex flex-wrap gap-2 mt-4">
                     {job.categories.map(element =>(
                     <span key={element} className="px-3 py-1 rounded-full bg-indigo-50 text-indigo-700 text-xs sm:text-sm font-medium">
@@ -75,19 +134,10 @@ function Jobs() {
                 </div>
               </div>
 
-              {/* RIGHT */}
               <div className="flex lg:flex-col items-center lg:items-end justify-between gap-4">
                 {/* SAVE BUTTON */}
-                <button className="w-11 h-11 rounded-xl border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-black hover:text-white transition">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="18"
-                    height="18"
-                    fill="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12.0006 18.26L4.94715 22.2082L6.52248 14.2799L0.587891 8.7918L8.61493 7.84006L12.0006 0.5L15.3862 7.84006L23.4132 8.7918L17.4787 14.2799L19.054 22.2082L12.0006 18.26Z" />
-                  </svg>
+                <button onClick={() => saveJob(job)} className="w-11 h-11 rounded-xl border border-gray-200 flex items-center cursor-pointer justify-center text-gray-500 hover:bg-black hover:text-white transition">
+                 {savedJobs.some((j) => j.companyName === job.companyName) ? "⭐" : "☆"}
                 </button>
 
 
@@ -95,7 +145,6 @@ function Jobs() {
               </div>
             </div>
 
-            {/* BOTTOM */}
             <div className="mt-6 pt-5 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
          
               <div>
@@ -110,7 +159,6 @@ function Jobs() {
                 </p>
               </div>
 
-              {/* META */}
               <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400">
               <a  href={job.applicationLink}> <button className="px-5 py-2.5 rounded-xl bg-black text-white text-sm font-medium hover:bg-gray-800 transition cursor-pointer">
                   Apply Now
@@ -118,8 +166,9 @@ function Jobs() {
               </div>
             </div>
           </div>
-        ))}
-      </div>
+             ))
+      )}
+    </div>
     </div>
   );
 }

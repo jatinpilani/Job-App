@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Routes, Route } from "react-router-dom";
 
 import Header from "./Components/Header";
@@ -7,30 +7,57 @@ import Search from "./Components/Search";
 import Jobs from "./Components/Jobs";
 import SavedPage from "./Components/SavedPage";
 
-function Home() {
+function Home({ savedJobs, setSavedJobs }) {
+  const api = "/api/jobs/api?q=react&limit=20";
+const [filters, setFilters] = useState({
+    search: "",
+    location: "",
+    experience: "",
+    type: "",
+  });
+
   return (
     <>
       <Heading />
-      <Search />
-      <Jobs />
+
+      <Search
+        filters={filters}
+        setFilters={setFilters}
+        apii={api}
+      />
+
+      <Jobs
+        savedJobs={savedJobs}
+        setSavedJobs={setSavedJobs}
+        filters={filters}
+        apii={api}
+      />
     </>
   );
 }
 
-
-
-function Applications() {
-  return <div className="p-6 text-xl">Applications Page</div>;
-}
-
 function App() {
+  const [savedJobs, setSavedJobs] = useState([]);
+
   return (
     <div>
-      <Header />
+      <Header savedJobs={savedJobs}  />
 
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/saved" element={<SavedPage />} />
+        <Route
+          path="/"
+          element={
+            <Home
+              savedJobs={savedJobs}
+              setSavedJobs={setSavedJobs}
+            />
+          }
+        />
+
+        <Route
+          path="/saved"
+          element={<SavedPage savedJobs={savedJobs} setSavedJobs={setSavedJobs}/>}
+        />
       </Routes>
     </div>
   );
